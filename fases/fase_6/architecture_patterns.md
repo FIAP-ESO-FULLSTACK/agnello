@@ -2,7 +2,7 @@
 
 ## API Gateway Pattern
 
-Centraliza o acesso aos 4 microsservicos (pagamento, estoque, pedido, carrinho) em um ponto unico de entrada.
+Centraliza o acesso aos 4 microsservicos (carrinho, pedido, estoque, pagamento) em um ponto unico de entrada.
 
 **Justificativa:** sem um gateway, o cliente (mobile/desktop) precisaria conhecer o endereco de cada servico individualmente. O API Gateway resolve isso roteando as requisicoes para o servico correto. Alem disso, centraliza a autenticacao via Amazon Cognito, validando o token JWT antes de chegar nos servicos.
 
@@ -16,20 +16,40 @@ Cada microsservico possui seu proprio banco de dados independente. Nenhum servic
 
 **Servico AWS:** DynamoDB (um por servico).
 
-## Async Messaging Pattern
+## Async Messaging Pattern (Broker)
 
-Os microsservicos se comunicam entre si de forma assincrona via filas de mensagens, em vez de chamadas REST diretas.
+Os microsservicos se comunicam entre si de forma assincrona via filas de mensagens, em vez de chamadas REST diretas. O **Broker (SQS FIFO)** atua como peca intermediaria explicita entre os servicos: recebe mensagens, garante a ordem e entrega ao destino.
 
-**Justificativa:** se o servico de pedido chamasse o servico de estoque via REST e o estoque estivesse fora do ar, o pedido falharia junto. Com mensageria, o pedido publica a mensagem na fila e segue. O estoque processa quando estiver disponivel. Isso desacopla os servicos e aumenta a resiliencia.
+**Justificativa:** se o servico de pedido chamasse o servico de estoque via REST e o estoque estivesse fora do ar, o pedido falharia junto. Com o Broker, o pedido publica a mensagem na fila e segue. O estoque processa quando estiver disponivel. O Broker desacopla os servicos e aumenta a resiliencia.
 
 **Servico AWS:** Amazon SQS FIFO + DLQ.
 
 - **FIFO** porque a ordem importa: um pagamento precisa ser processado antes de um reembolso, uma entrada de estoque antes de uma saida.
 - **DLQ** para evitar o poison message problem: mensagens que falham repetidamente sao isoladas em uma fila separada em vez de travar o consumidor.
 
-## Saga Pattern
+**No diagrama:** o Broker e a barra vertical amarela entre o Pedido e o Orquestrador. Toda mensagem assincrona passa por ele.
 
-O Saga coordena a sequencia de execucao dos microsservicos. O FIFO garante que os eventos cheguem na ordem certa pra isso funcionar. Juntos, permitem que o sistema faca estornos, cancelamentos e compensacoes de forma automatica, com tudo registrado.
+## Saga Pattern (Orquestrador)
+
+O **Orquestrador** e a peca que coordena a sequencia de execucao entre os microsservicos. Ele recebe as mensagens do Broker e aciona os servicos (estoque, pagamento) na ordem correta. Se algum passo falha, o Orquestrador dispara as compensacoes na ordem inversa.
+
+O FIFO do Broker garante que os eventos cheguem na ordem certa para o Orquestrador funcionar. Juntos (Broker + Orquestrador), permitem que o sistema faca estornos, cancelamentos e compensacoes de forma automatica, com tudo registrado.
+
+**No diagrama:** o Orquestrador e a barra vertical verde entre o Broker e os servicos de Estoque/Pagamento. Passos 3 e 5 (sucesso) e passos 4 e 6 (compensacao) passam por ele.
+
+### Fluxo de sucesso (passos 1→2→3→5)
+
+1. Pedido publica `pedido_criado` no Broker
+2. Broker encaminha para o Orquestrador
+3. Orquestrador aciona Estoque (reserva garrafas)
+5. Orquestrador aciona Pagamento (cobra o cliente)
+
+### Fluxo de compensacao (passos 4→6→7→8)
+
+4. Estoque reporta falha ao Orquestrador
+6. Pagamento reporta falha ao Orquestrador
+7. Orquestrador envia compensacao via Broker
+8. Broker notifica Pedido (status → CANCELADO)
 
 ### Exemplo pratico: cliente compra 5 garrafas e depois cancela
 
@@ -56,7 +76,7 @@ Banco do pagamento:
 
 **Fase 2 - Cliente cancela o pedido:**
 
-O servico de pedido recebe o cancelamento e publica "pedido_cancelado" na fila FIFO. Cada servico escuta e executa sua compensacao na ordem:
+O servico de pedido recebe o cancelamento e publica `pedido_cancelado` no Broker. O Orquestrador recebe via Broker e aciona cada servico para executar sua compensacao na ordem:
 
 Banco do pedido:
 

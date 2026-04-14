@@ -2,7 +2,7 @@
 
 ## Estado Atual do Repositorio
 
-Hoje o repositorio utiliza uma arquitetura monolitica. Toda a aplicacao (pagamento, estoque, pedido, carrinho) esta empacotada em um unico arquivo WAR que faz deploy em um unico servidor.
+Hoje o repositorio utiliza uma arquitetura monolitica. Toda a aplicacao (carrinho, pedido, estoque, pagamento) esta empacotada em um unico arquivo WAR que faz deploy em um unico servidor.
 
 ## Problemas Identificados
 
@@ -10,5 +10,7 @@ Hoje o repositorio utiliza uma arquitetura monolitica. Toda a aplicacao (pagamen
 - **Alta dependencia:** os modulos estao fortemente acoplados entre si. Uma mudanca no estoque pode quebrar o pedido, porque tudo roda junto e acessa os mesmos dados diretamente.
 - **Nao escala:** nao e possivel escalar um modulo individualmente. Se o carrinho esta com alta demanda, voce precisa escalar a aplicacao inteira, desperdicando recursos nos modulos que nao precisam.
 - **Banco de dados compartilhado:** um unico banco atende todos os modulos. Se o banco fica lento ou cai, o sistema inteiro para.
+- **Sem Broker (fila de mensagens):** os modulos se comunicam diretamente. Se o destino esta fora do ar, a requisicao falha e a mensagem se perde. Com um Broker (SQS FIFO), a mensagem fica na fila ate o destino estar disponivel.
+- **Sem Orquestrador (Saga):** nao existe coordenacao automatica entre os modulos. Se um pedido falha no pagamento apos o estoque ja ter sido reservado, nao ha mecanismo para desfazer a reserva automaticamente. Com um Orquestrador, as compensacoes sao executadas na ordem inversa.
 - **Sem DLQ (Dead Letter Queue):** sem uma fila de mensagens mortas, uma mensagem que falha repetidamente trava o consumidor em loop infinito (poison message problem). Com DLQ, mensagens problematicas sao isoladas e o servico continua funcionando.
-- **Ordem de processamento:** servicos como pagamento, pedido e estoque dependem da ordem em que as mensagens sao processadas. Um reembolso antes do pagamento ou uma saida de estoque antes da entrada gera inconsistencia. Por isso a escolha de SQS FIFO em vez de Standard.
+- **Ordem de processamento:** servicos como pagamento, pedido e estoque dependem da ordem em que as mensagens sao processadas. Um reembolso antes do pagamento ou uma saida de estoque antes da entrada gera inconsistencia. Por isso a escolha de SQS FIFO no Broker.
