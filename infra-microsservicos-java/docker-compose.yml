@@ -1,0 +1,30 @@
+services:
+  estoque-service:
+    build:
+      context: ./estoque-service
+    container_name: estoque-service
+    ports:
+      - "8000:8080"
+    networks:
+      - lab-network
+
+  carrinho-service:
+    build:
+      context: ./carrinho-service
+    container_name: carrinho-service
+    ports:
+      - "8001:8080"
+    depends_on:
+      - estoque-service
+    environment:
+      SERVICES_ESTOQUE_URL: http://estoque-service:8080/estoque
+    networks:
+      - lab-network
+
+networks:
+  lab-network:
+    name: lab-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
