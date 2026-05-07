@@ -1,5 +1,13 @@
 node {
-    stage('Teste Webhook') {
-        echo 'Simulaçao de Deploy!'
+
+    stage('Build') {
+        echo 'Deploy da Vinheria'
+    }
+
+    stage('Deploy') {
+        sh '''
+        mkdir -p /opt/producao/vinheria
+        cp -r * /opt/producao/vinheria/
+        '''
     }
 }
