@@ -1,1 +1,12 @@
-teste2
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Teste Webhook') {
+            steps {
+                echo 'Webhook funcionando com sucesso!'
+            }
+        }
+    }
+}teste2
