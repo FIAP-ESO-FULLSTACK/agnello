@@ -1,10 +1,5 @@
-pipeline {
-    stages {
-
-        stage('Teste Webhook') {
-            steps {
-                echo 'Webhook funcionando com sucesso!'
-            }
-        }
+node {
+    stage('Teste Webhook') {
+        echo 'Webhook funcionando com sucesso!'
     }
 }
