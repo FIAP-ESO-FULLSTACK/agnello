@@ -1,5 +1,5 @@
 node {
     stage('Teste Webhook') {
-        echo 'Webhook funcionando com sucesso!'
+        echo 'Simulaçao de Deploy!'
     }
 }
