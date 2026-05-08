@@ -1,5 +1,9 @@
 node {
 
+    stage('Checkout') {
+        checkout scm
+    }
+
     stage('Build') {
         echo 'Deploy da Vinheria'
     }
