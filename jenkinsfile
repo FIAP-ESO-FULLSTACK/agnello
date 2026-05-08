@@ -6,8 +6,8 @@ node {
 
     stage('Deploy') {
         sh '''
-        mkdir -p /deploy/vinheria
-        cp -r . /deploy/vinheria/
+        mkdir -p /tmp/vinheria
+        cp -r . /tmp/vinheria/
         '''
     }
 }
