@@ -9,9 +9,6 @@ node {
     }
 
     stage('Deploy') {
-        sh '''
-        mkdir -p /tmp/vinheria
-        cp -r $WORKSPACE/* /tmp/vinheria/
-        '''
+        sh "mkdir -p /tmp/vinheria; cp -r $WORKSPACE/* /tmp/vinheria/"
     }
 }
