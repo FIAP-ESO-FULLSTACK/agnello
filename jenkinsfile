@@ -7,7 +7,7 @@ node {
     stage('Deploy') {
         sh '''
         mkdir -p /tmp/vinheria
-        cp -r . /tmp/vinheria/
+        cp -r target /tmp/vinheria/
         '''
     }
 }
