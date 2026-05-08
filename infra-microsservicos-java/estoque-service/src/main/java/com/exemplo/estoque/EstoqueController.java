@@ -42,6 +42,6 @@ public class EstoqueController {
         );
     }
 
-    private record ItemEstoque(String sku, String produto, Integer quantidade Disponível) {
+    private record ItemEstoque(String sku, String produto, Integer quantidadeDisponivel) {
     }
 }

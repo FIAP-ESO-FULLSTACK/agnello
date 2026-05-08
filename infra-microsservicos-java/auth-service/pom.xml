@@ -12,10 +12,10 @@
     </parent>
 
     <groupId>com.exemplo</groupId>
-    <artifactId>estoque-service</artifactId>
+    <artifactId>auth-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>estoque-service</name>
-    <description>Microsservico de estoque protegido por JWT, consome eventos via JMS</description>
+    <name>auth-service</name>
+    <description>Microsservico de autenticacao - emite JWT para acessar carrinho e estoque</description>
 
     <properties>
         <java.version>17</java.version>
@@ -30,10 +30,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-artemis</artifactId>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
